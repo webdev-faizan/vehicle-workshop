@@ -1,0 +1,1437 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoFix – Workshop Booking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      h1,
+      h2,
+      .brand {
+        font-family: "Syne", sans-serif;
+      }
+
+      .badge-glow {
+        background: linear-gradient(90deg, #f97316, #fbbf24, #f97316);
+        background-size: 200%;
+        animation: shimmer 2.5s infinite linear;
+      }
+      @keyframes shimmer {
+        to {
+          background-position: 200% center;
+        }
+      }
+
+      .inp {
+        background: #0f172a;
+        border: 1.5px solid #334155;
+        border-radius: 10px;
+        color: #e2e8f0;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .inp:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+      }
+      .inp::placeholder {
+        color: #475569;
+      }
+
+      .inp-location:focus {
+        border-color: #22d3ee;
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+      }
+
+      .tab-btn {
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+      .tab-btn.active {
+        background: #f97316;
+        color: #fff;
+      }
+
+      .service-card {
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        cursor: pointer;
+      }
+      .service-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(249, 115, 22, 0.18);
+      }
+      .service-card.selected {
+        outline: 2px solid #f97316;
+        background: #1e3a2e;
+      }
+
+      .bcard {
+        transition: background 0.15s;
+      }
+      .bcard:hover {
+        background: #253047;
+      }
+
+      .badge-Pending {
+        background: #fef9c3;
+        color: #92400e;
+      }
+      .badge-Confirmed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .badge-Done {
+        background: #dbeafe;
+        color: #1e3a8a;
+      }
+      .badge-Cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .mine-tag {
+        background: linear-gradient(90deg, #f97316, #fbbf24);
+        color: #000;
+        font-weight: 700;
+      }
+
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 8px;
+      }
+
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #334155;
+        border-top-color: #f97316;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 28px 0 18px;
+      }
+      .section-divider span {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #f97316;
+        white-space: nowrap;
+      }
+      .section-divider::before,
+      .section-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #1e293b;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-in {
+        animation: fadeIn 0.3s ease forwards;
+      }
+
+      .loc-detect-btn {
+        background: #1e293b;
+        border: 1.5px solid #334155;
+        color: #94a3b8;
+        border-radius: 8px;
+        padding: 0 10px;
+        font-size: 13px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s;
+        white-space: nowrap;
+      }
+      .loc-detect-btn:hover {
+        border-color: #22d3ee;
+        color: #22d3ee;
+      }
+
+      .map-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #22d3ee;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(34, 211, 238, 0.3);
+        background: rgba(34, 211, 238, 0.06);
+        transition: background 0.15s;
+      }
+      .map-link:hover {
+        background: rgba(34, 211, 238, 0.14);
+      }
+
+      .all-booking-tag {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        color: #fff;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- ═══ NAVBAR ═══════════════════════════════════════════════════════ -->
+    <nav
+      class="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur px-5 py-3 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <img src="/Auto Connect Logo.png" alt="">
+        <!-- <div
+          class="w-9 h-9 rounded-xl badge-glow flex items-center justify-center text-white font-bold text-lg"
+        >
+          A
+        </div> -->
+        <!-- <span class="brand text-xl text-white tracking-tight"
+          >AutoFix <span class="text-orange-400">Workshop</span></span
+        > -->
+      </div>
+      <div class="flex items-center gap-2">
+        <span
+          id="ipBadge"
+          class="hidden sm:flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-full px-3 py-1 text-xs text-slate-400"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"
+          ></span>
+          <span id="ipDisplay">detecting…</span>
+        </span>
+        <button
+          onclick="showTab('book')"
+          id="tab-book"
+          class="tab-btn active px-4 py-1.5 rounded-lg text-sm font-semibold text-slate-300"
+        >
+          Book
+        </button>
+        <button
+          onclick="showTab('all')"
+          id="tab-all"
+          class="tab-btn px-4 py-1.5 rounded-lg text-sm font-semibold text-slate-300"
+        >
+          My Bookings
+        </button>
+        <button
+          onclick="showTab('allbookings')"
+          id="tab-allbookings"
+          class="tab-btn px-4 py-1.5 rounded-lg text-sm font-semibold text-slate-300"
+        >
+          All Bookings
+        </button>
+      </div>
+    </nav>
+
+    <!-- ═══ TAB: BOOK ═════════════════════════════════════════════════════ -->
+    <div id="view-book" class="max-w-4xl mx-auto px-4 pt-10 pb-16">
+      <!-- Hero -->
+      <div class="text-center mb-10 relative">
+        <div
+          class="absolute inset-0 opacity-10 pointer-events-none rounded-3xl"
+          style="
+            background: radial-gradient(
+              ellipse 70% 50% at 50% 0%,
+              #f97316,
+              transparent
+            );
+          "
+        ></div>
+        <p
+          class="text-xs font-bold tracking-widest uppercase text-orange-400 mb-2"
+        >
+          Book in 60 seconds
+        </p>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-white">
+          Your Car Deserves<br />Expert Hands
+        </h1>
+        <p class="text-slate-400 mt-3 text-sm">
+          Schedule any service and track every booking live.
+        </p>
+      </div>
+
+      <!-- STEP 1: Vehicle -->
+      <div class="flex items-center gap-3 mb-4">
+        <span
+          class="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0"
+          >1</span
+        >
+        <h2 class="text-base font-bold text-white">Vehicle Details</h2>
+      </div>
+      <div class="bg-slate-800 rounded-2xl p-5 grid sm:grid-cols-3 gap-4 mb-8">
+        <div>
+          <label class="label">Make</label>
+          <input
+            id="vMake"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="Toyota"
+          />
+        </div>
+        <div>
+          <label class="label">Model</label>
+          <input
+            id="vModel"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="Corolla"
+          />
+        </div>
+        <div>
+          <label class="label">Year</label>
+          <input
+            id="vYear"
+            type="number"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="2020"
+          />
+        </div>
+        <div>
+          <label class="label">Reg / Plate</label
+          ><input
+            id="vPlate"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="ABC-1234"
+          />
+        </div>
+        <div>
+          <label class="label">Fuel Type</label>
+          <select
+            id="vFuel"
+            class="inp w-full px-4 py-2.5 text-sm appearance-none cursor-pointer"
+          >
+            <option value="">Select…</option>
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>Electric</option>
+            <option>Hybrid</option>
+            <option>CNG</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Mileage (km)</label
+          ><input
+            id="vMileage"
+            type="number"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="45000"
+          />
+        </div>
+      </div>
+
+      <!-- STEP 2: Service -->
+      <div class="flex items-center gap-3 mb-4">
+        <span
+          class="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0"
+          >2</span
+        >
+        <h2 class="text-base font-bold text-white">Choose Service</h2>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-3 mb-8" id="serviceGrid"></div>
+
+      <!-- STEP 3: Date & Time -->
+      <div class="flex items-center gap-3 mb-4">
+        <span
+          class="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0"
+          >3</span
+        >
+        <h2 class="text-base font-bold text-white">Date &amp; Time</h2>
+      </div>
+      <div class="bg-slate-800 rounded-2xl p-5 grid sm:grid-cols-2 gap-4 mb-8">
+        <div>
+          <label class="label">Date</label>
+          <input
+            id="bDate"
+            type="date"
+            class="inp w-full px-4 py-2.5 text-sm"
+          />
+        </div>
+        <div>
+          <label class="label">Time Slot</label>
+          <select
+            id="bTime"
+            class="inp w-full px-4 py-2.5 text-sm appearance-none cursor-pointer"
+          >
+            <option value="">Select slot…</option>
+            <option>08:00 AM – 09:00 AM</option>
+            <option>09:00 AM – 10:00 AM</option>
+            <option>10:00 AM – 11:00 AM</option>
+            <option>11:00 AM – 12:00 PM</option>
+            <option>12:00 PM – 01:00 PM</option>
+            <option>02:00 PM – 03:00 PM</option>
+            <option>03:00 PM – 04:00 PM</option>
+            <option>04:00 PM – 05:00 PM</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- STEP 4: Customer -->
+      <div class="flex items-center gap-3 mb-4">
+        <span
+          class="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0"
+          >4</span
+        >
+        <h2 class="text-base font-bold text-white">Your Details</h2>
+      </div>
+      <div class="bg-slate-800 rounded-2xl p-5 grid sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="label">Full Name</label>
+          <input
+            id="cName"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="Ali Hassan"
+          />
+        </div>
+        <div>
+          <label class="label">Phone</label>
+          <input
+            id="cPhone"
+            type="tel"
+            class="inp w-full px-4 py-2.5 text-sm"
+            placeholder="+92 3xx xxxxxxx"
+          />
+        </div>
+
+        <!-- ── LOCATION (new) ─────────────────────────────── -->
+        <div class="sm:col-span-2">
+          <label class="label flex items-center gap-1.5">
+            <span>📍 Your Location</span>
+            <span
+              class="text-cyan-400 font-normal normal-case"
+              style="letter-spacing: 0"
+              >(so the mechanic can find you)</span
+            >
+          </label>
+          <div class="flex gap-2">
+            <input
+              id="cLocation"
+              class="inp inp-location flex-1 px-4 py-2.5 text-sm"
+              placeholder="Street address, area or city  e.g. F-7/1, Islamabad"
+            />
+            <button
+              type="button"
+              class="loc-detect-btn"
+              onclick="detectLocation()"
+              title="Use my current GPS location"
+            >
+              📡 Detect
+            </button>
+          </div>
+          <p id="locStatus" class="text-xs text-slate-500 mt-1 hidden"></p>
+        </div>
+        <!-- ─────────────────────────────────────────────────── -->
+
+        <div class="sm:col-span-2">
+          <label class="label">Notes (optional)</label>
+          <textarea
+            id="cNotes"
+            rows="2"
+            class="inp w-full px-4 py-2.5 text-sm resize-none"
+            placeholder="Any specific issue…"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 mb-5">
+        <p
+          class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3"
+        >
+          Booking Summary
+        </p>
+        <div id="summaryContent" class="text-sm text-slate-300">
+          <p class="text-slate-500 italic">
+            Fill the form above to see your summary.
+          </p>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div
+        id="formError"
+        class="hidden mb-4 rounded-xl bg-red-900/30 border border-red-700 text-red-300 text-sm px-4 py-3"
+      ></div>
+
+      <!-- Submit -->
+      <button
+        id="submitBtn"
+        onclick="submitBooking()"
+        class="w-full py-3.5 rounded-xl font-bold text-white badge-glow text-base tracking-wide hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+      >
+        Confirm Booking →
+      </button>
+
+      <!-- Success -->
+      <div
+        id="successMsg"
+        class="hidden mt-5 bg-green-900/30 border border-green-600 rounded-xl px-5 py-4 text-green-300 text-sm fade-in"
+      >
+        <strong class="block text-green-400 text-base mb-1"
+          >🎉 Booking Confirmed!</strong
+        >
+        Your slot has been saved to the database. Check <b>My Bookings</b> to
+        view it.
+      </div>
+    </div>
+
+    <!-- ═══ TAB: MY BOOKINGS ══════════════════════════════════════════════ -->
+    <div id="view-all" class="hidden max-w-4xl mx-auto px-4 pt-8 pb-16">
+      <!-- Stats bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6" id="statsBar">
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-white" id="st-total">–</p>
+          <p class="text-xs text-slate-400">Total</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-yellow-400" id="st-pending">–</p>
+          <p class="text-xs text-slate-400">Pending</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-green-400" id="st-confirmed">–</p>
+          <p class="text-xs text-slate-400">Confirmed</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-blue-400" id="st-done">–</p>
+          <p class="text-xs text-slate-400">Done</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-red-400" id="st-cancelled">–</p>
+          <p class="text-xs text-slate-400">Cancelled</p>
+        </div>
+      </div>
+
+      <!-- Search + filter -->
+      <div class="flex gap-3 mb-6">
+        <input
+          id="searchInp"
+          oninput="debounceSearch()"
+          class="inp flex-1 px-4 py-2.5 text-sm"
+          placeholder="Search name, plate, location, service…"
+        />
+        <select
+          id="filterStatus"
+          onchange="loadMyBookings()"
+          class="inp px-3 py-2.5 text-sm appearance-none cursor-pointer"
+        >
+          <option value="">All Status</option>
+          <option>Pending</option>
+          <option>Confirmed</option>
+          <option>Done</option>
+          <option>Cancelled</option>
+        </select>
+        <button
+          onclick="loadMyBookings()"
+          class="px-4 py-2.5 bg-slate-700 hover:bg-orange-500 text-white text-sm font-semibold rounded-xl transition-colors"
+        >
+          ↻
+        </button>
+      </div>
+
+      <div id="loadingEl" class="hidden text-center py-10">
+        <div class="spinner mx-auto"></div>
+        <p class="text-slate-500 text-sm mt-3">Loading bookings…</p>
+      </div>
+
+      <div id="allBookingsList"></div>
+      <p id="emptyAll" class="hidden text-center text-slate-500 mt-12 text-sm">
+        No bookings found.
+      </p>
+    </div>
+
+    <!-- ═══ TAB: ALL BOOKINGS (System-wide) ════════════════════════════════ -->
+    <div id="view-allbookings" class="hidden max-w-5xl mx-auto px-4 pt-8 pb-16">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">📋 All System Bookings</h2>
+          <p class="text-slate-400 text-sm">
+            Every booking across all customers
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="text-xs bg-blue-900/50 text-blue-300 px-3 py-1.5 rounded-full border border-blue-700"
+          >
+            <span id="allTotalCount">0</span> total
+          </span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-white" id="all-st-total">–</p>
+          <p class="text-xs text-slate-400">Total</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-yellow-400" id="all-st-pending">–</p>
+          <p class="text-xs text-slate-400">Pending</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-green-400" id="all-st-confirmed">
+            –
+          </p>
+          <p class="text-xs text-slate-400">Confirmed</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-blue-400" id="all-st-done">–</p>
+          <p class="text-xs text-slate-400">Done</p>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3 text-center">
+          <p class="text-xl font-bold text-red-400" id="all-st-cancelled">–</p>
+          <p class="text-xs text-slate-400">Cancelled</p>
+        </div>
+      </div>
+
+      <!-- Search + filter -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        <input
+          id="allSearchInp"
+          oninput="debounceAllSearch()"
+          class="inp flex-1 min-w-[200px] px-4 py-2.5 text-sm"
+          placeholder="Search all bookings…"
+        />
+        <select
+          id="allFilterStatus"
+          onchange="loadAllSystemBookings()"
+          class="inp px-3 py-2.5 text-sm appearance-none cursor-pointer"
+        >
+          <option value="">All Status</option>
+          <option>Pending</option>
+          <option>Confirmed</option>
+          <option>Done</option>
+          <option>Cancelled</option>
+        </select>
+        <button
+          onclick="loadAllSystemBookings()"
+          class="px-4 py-2.5 bg-slate-700 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors"
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div id="allLoadingEl" class="hidden text-center py-10">
+        <div class="spinner mx-auto"></div>
+        <p class="text-slate-500 text-sm mt-3">Loading all bookings…</p>
+      </div>
+
+      <div id="allSystemBookingsList"></div>
+      <p
+        id="emptyAllSystem"
+        class="hidden text-center text-slate-500 mt-12 text-sm"
+      >
+        No bookings found in the system.
+      </p>
+    </div>
+
+    <!-- ═══ MODAL: Edit Status ════════════════════════════════════════════ -->
+    <div
+      id="modal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+    >
+      <div
+        class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl fade-in"
+      >
+        <h3 class="font-bold text-white mb-4 text-lg">Update Booking</h3>
+        <input type="hidden" id="editId" />
+        <div class="mb-4">
+          <label class="label">Status</label>
+          <select
+            id="editStatus"
+            class="inp w-full px-4 py-2.5 text-sm appearance-none"
+          >
+            <option>Pending</option>
+            <option>Confirmed</option>
+            <option>Done</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+        <div class="mb-5">
+          <label class="label">Workshop Note</label>
+          <textarea
+            id="editNote"
+            rows="2"
+            class="inp w-full px-4 py-2.5 text-sm resize-none"
+            placeholder="Internal note…"
+          ></textarea>
+        </div>
+        <div
+          id="modalError"
+          class="hidden mb-3 text-red-400 text-xs bg-red-900/20 border border-red-700/30 rounded-lg px-3 py-2"
+        ></div>
+        <div class="flex gap-3">
+          <button
+            onclick="saveEdit()"
+            id="saveEditBtn"
+            class="flex-1 py-2.5 rounded-xl font-semibold text-white badge-glow text-sm hover:opacity-90"
+          >
+            Save
+          </button>
+          <button
+            onclick="closeModal()"
+            class="flex-1 py-2.5 rounded-xl font-semibold text-slate-300 bg-slate-700 hover:bg-slate-600 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TOAST ══════════════════════════════════════════════════════════ -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+      <div
+        id="toastMsg"
+        class="bg-slate-800 border border-slate-600 text-white text-sm px-5 py-3 rounded-xl shadow-xl fade-in"
+      ></div>
+    </div>
+
+    <style>
+      .label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .all-booking-tag {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        color: #fff;
+        font-weight: 700;
+        font-size: 10px;
+        padding: 2px 10px;
+        border-radius: 20px;
+        display: inline-block;
+      }
+    </style>
+
+    <script>
+      // ── Config ────────────────────────────────────────────────────
+      const API = "/api";
+
+      const SERVICES = [
+        {
+          id: "oil",
+          icon: "🛢️",
+          name: "Oil Change",
+          price: "PKR 2,500",
+          duration: "45 min",
+        },
+        {
+          id: "brake",
+          icon: "🔧",
+          name: "Brake Service",
+          price: "PKR 4,500",
+          duration: "1.5 hr",
+        },
+        {
+          id: "tyre",
+          icon: "🔄",
+          name: "Tyre Rotation",
+          price: "PKR 1,200",
+          duration: "30 min",
+        },
+        {
+          id: "ac",
+          icon: "❄️",
+          name: "AC Service",
+          price: "PKR 6,000",
+          duration: "2 hr",
+        },
+        {
+          id: "engine",
+          icon: "⚙️",
+          name: "Engine Tune-up",
+          price: "PKR 8,500",
+          duration: "3 hr",
+        },
+        {
+          id: "wash",
+          icon: "🚿",
+          name: "Full Detailing",
+          price: "PKR 3,500",
+          duration: "2 hr",
+        },
+        {
+          id: "battery",
+          icon: "🔋",
+          name: "Battery Check",
+          price: "PKR 800",
+          duration: "20 min",
+        },
+        {
+          id: "inspect",
+          icon: "🔍",
+          name: "Full Inspection",
+          price: "PKR 2,000",
+          duration: "1 hr",
+        },
+        {
+          id: "exhaust",
+          icon: "💨",
+          name: "Exhaust Repair",
+          price: "PKR 5,500",
+          duration: "2 hr",
+        },
+      ];
+
+      let selectedService = null;
+      let myIp = null;
+      let searchTimer = null;
+      let allSearchTimer = null;
+      let detectedCoords = null; // { lat, lng } from GPS
+
+      // ── Init ──────────────────────────────────────────────────────
+      (async function init() {
+        renderServices();
+        document.getElementById("bDate").min = new Date()
+          .toISOString()
+          .split("T")[0];
+        try {
+          const r = await fetch(`${API}/ip`);
+          const d = await r.json();
+          myIp = d.ip;
+          document.getElementById("ipDisplay").textContent = `Your IP: ${myIp}`;
+          document.getElementById("ipBadge").classList.remove("hidden");
+        } catch (e) {
+          document.getElementById("ipDisplay").textContent = "IP unavailable";
+        }
+      })();
+
+      // ── GPS location detect ───────────────────────────────────────
+      function detectLocation() {
+        const statusEl = document.getElementById("locStatus");
+        statusEl.textContent = "📡 Detecting your location…";
+        statusEl.classList.remove("hidden");
+        statusEl.style.color = "#94a3b8";
+
+        if (!navigator.geolocation) {
+          statusEl.textContent =
+            "⚠️ Geolocation not supported by this browser.";
+          statusEl.style.color = "#f87171";
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            detectedCoords = { lat, lng };
+
+            try {
+              const r = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+                { headers: { "Accept-Language": "en" } },
+              );
+              const d = await r.json();
+              const addr =
+                d.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+              document.getElementById("cLocation").value = addr;
+              statusEl.textContent = "✅ Location detected successfully.";
+              statusEl.style.color = "#4ade80";
+            } catch {
+              document.getElementById("cLocation").value =
+                `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+              statusEl.textContent =
+                "✅ Coordinates captured (address lookup failed).";
+              statusEl.style.color = "#facc15";
+            }
+            updateSummary();
+          },
+          (err) => {
+            statusEl.textContent =
+              "⚠️ Location access denied. Please type your address manually.";
+            statusEl.style.color = "#f87171";
+          },
+          { timeout: 10000 },
+        );
+      }
+
+      // ── Toast ─────────────────────────────────────────────────────
+      function showToast(msg, ok = true) {
+        const el = document.getElementById("toast");
+        const txt = document.getElementById("toastMsg");
+        txt.textContent = msg;
+        txt.className = `text-sm px-5 py-3 rounded-xl shadow-xl fade-in border ${
+          ok
+            ? "bg-green-900/80 border-green-600 text-green-200"
+            : "bg-red-900/80 border-red-600 text-red-200"
+        }`;
+        el.classList.remove("hidden");
+        setTimeout(() => el.classList.add("hidden"), 3000);
+      }
+
+      // ── Services ──────────────────────────────────────────────────
+      function renderServices() {
+        document.getElementById("serviceGrid").innerHTML = SERVICES.map(
+          (s) => `
+          <div class="service-card bg-slate-800 rounded-2xl p-4 border border-slate-700 hover:border-orange-500"
+               id="svc-${s.id}" onclick="selectService('${s.id}')">
+            <div class="text-3xl mb-2">${s.icon}</div>
+            <div class="font-semibold text-white text-sm mb-0.5">${s.name}</div>
+            <div class="text-orange-400 text-xs font-bold">${s.price}</div>
+            <div class="text-slate-500 text-xs mt-0.5">${s.duration}</div>
+          </div>`,
+        ).join("");
+      }
+
+      function selectService(id) {
+        selectedService = SERVICES.find((s) => s.id === id);
+        document
+          .querySelectorAll(".service-card")
+          .forEach((c) => c.classList.remove("selected"));
+        document.getElementById("svc-" + id)?.classList.add("selected");
+        updateSummary();
+      }
+
+      // ── Summary ───────────────────────────────────────────────────
+      function updateSummary() {
+        const make = v("vMake"),
+          model = v("vModel"),
+          plate = v("vPlate");
+        const date = v("bDate"),
+          time = v("bTime"),
+          name = v("cName");
+        const loc = v("cLocation");
+
+        if (!make && !selectedService && !date) {
+          document.getElementById("summaryContent").innerHTML =
+            '<p class="text-slate-500 italic">Fill the form above to see your summary.</p>';
+          return;
+        }
+        document.getElementById("summaryContent").innerHTML = `
+          <div class="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+            <p><span class="text-slate-500">Vehicle:</span> ${make || "–"} ${model || ""} ${plate ? "(" + plate + ")" : ""}</p>
+            <p><span class="text-slate-500">Service:</span> ${selectedService ? selectedService.name : "–"}</p>
+            <p><span class="text-slate-500">Date:</span> ${date || "–"}</p>
+            <p><span class="text-slate-500">Time:</span> ${time || "–"}</p>
+            <p><span class="text-slate-500">Customer:</span> ${name || "–"}</p>
+            <p><span class="text-slate-500">Price:</span> <span class="text-orange-400 font-semibold">${selectedService ? selectedService.price : "–"}</span></p>
+            <p class="sm:col-span-2"><span class="text-slate-500">📍 Location:</span> ${loc || "<span class='text-slate-600 italic'>not set</span>"}</p>
+          </div>`;
+      }
+
+      ["vMake", "vModel", "vPlate", "bDate", "cName", "cLocation"].forEach(
+        (id) =>
+          document.getElementById(id)?.addEventListener("input", updateSummary),
+      );
+      document
+        .getElementById("bTime")
+        ?.addEventListener("change", updateSummary);
+
+      // ── Submit Booking ────────────────────────────────────────────
+      async function submitBooking() {
+        hideError();
+        document.getElementById("successMsg").classList.add("hidden");
+
+        const make = v("vMake"),
+          model = v("vModel"),
+          year = v("vYear");
+        const plate = v("vPlate"),
+          fuel = v("vFuel"),
+          miles = v("vMileage");
+        const date = v("bDate"),
+          time = v("bTime");
+        const name = v("cName"),
+          phone = v("cPhone"),
+          notes = v("cNotes");
+        const loc = v("cLocation");
+
+        const missing = [];
+        if (!make) missing.push("Vehicle Make");
+        if (!model) missing.push("Vehicle Model");
+        if (!plate) missing.push("Reg Plate");
+        if (!selectedService) missing.push("Service");
+        if (!date) missing.push("Date");
+        if (!time) missing.push("Time Slot");
+        if (!name) missing.push("Your Name");
+        if (!phone) missing.push("Phone Number");
+        if (!loc) missing.push("Your Location");
+
+        if (missing.length) {
+          showError("Please fill in: " + missing.join(", "));
+          return;
+        }
+
+        const payload = {
+          vehicle: {
+            make,
+            model,
+            year: year || undefined,
+            plate,
+            fuel,
+            mileage: miles || undefined,
+          },
+          service: selectedService,
+          slot: { date, time },
+          customer: {
+            name,
+            phone,
+            notes,
+            location: loc,
+            locationCoords: detectedCoords || { lat: null, lng: null },
+          },
+        };
+
+        setBtnLoading(true);
+        try {
+          const res = await fetch(`${API}/bookings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            showError(data.error || "Booking failed");
+            return;
+          }
+
+          [
+            "vMake",
+            "vModel",
+            "vYear",
+            "vPlate",
+            "vMileage",
+            "bDate",
+            "cName",
+            "cPhone",
+            "cNotes",
+            "cLocation",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+          document.getElementById("vFuel").value = "";
+          document.getElementById("bTime").value = "";
+          detectedCoords = null;
+          selectedService = null;
+          document
+            .querySelectorAll(".service-card")
+            .forEach((c) => c.classList.remove("selected"));
+          document.getElementById("locStatus").classList.add("hidden");
+          updateSummary();
+
+          document.getElementById("successMsg").classList.remove("hidden");
+          document
+            .getElementById("successMsg")
+            .scrollIntoView({ behavior: "smooth" });
+          showToast("Booking saved to MongoDB ✅");
+          loadStats();
+          loadAllSystemBookings();
+        } catch (e) {
+          showError("Network error — is the server running?");
+        } finally {
+          setBtnLoading(false);
+        }
+      }
+
+      function setBtnLoading(on) {
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = on;
+        btn.innerHTML = on
+          ? '<span class="spinner"></span> Saving…'
+          : "Confirm Booking →";
+      }
+
+      // ── My Bookings Tab ──────────────────────────────────────────
+      async function loadMyBookings() {
+        setLoading(true);
+        document.getElementById("allBookingsList").innerHTML = "";
+        document.getElementById("emptyAll").classList.add("hidden");
+
+        const search = v("searchInp");
+        const status = document.getElementById("filterStatus").value;
+        let url = `${API}/bookings/mine?limit=100`;
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          setLoading(false);
+
+          if (!data.success) {
+            showToast("Failed to load bookings", false);
+            return;
+          }
+
+          const bookings = data.data || [];
+          renderMyBookingList(bookings);
+          loadStats();
+        } catch (e) {
+          setLoading(false);
+          showToast("Network error — is the server running?", false);
+        }
+      }
+
+      function renderMyBookingList(bookings) {
+        const container = document.getElementById("allBookingsList");
+        const emptyEl = document.getElementById("emptyAll");
+
+        if (!bookings.length) {
+          emptyEl.classList.remove("hidden");
+          container.innerHTML = "";
+          return;
+        }
+
+        let html = `<div class="section-divider"><span>🙋 My Bookings (${bookings.length})</span></div>`;
+        html += bookings.map((b) => bookingCard(b, true)).join("");
+        container.innerHTML = html;
+      }
+
+      // ── All System Bookings Tab ──────────────────────────────────
+      async function loadAllSystemBookings() {
+        setAllLoading(true);
+        document.getElementById("allSystemBookingsList").innerHTML = "";
+        document.getElementById("emptyAllSystem").classList.add("hidden");
+
+        const search = v("allSearchInp");
+        const status = document.getElementById("allFilterStatus").value;
+        let url = `${API}/bookings/all?limit=200`;
+        if (status) url += `&status=${encodeURIComponent(status)}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          setAllLoading(false);
+
+          if (!data.success) {
+            showToast("Failed to load all bookings", false);
+            return;
+          }
+
+          const bookings = data.data || [];
+          renderAllSystemBookings(bookings);
+          updateAllStats(bookings);
+        } catch (e) {
+          setAllLoading(false);
+          showToast("Network error — is the server running?", false);
+        }
+      }
+
+      function renderAllSystemBookings(bookings) {
+        const container = document.getElementById("allSystemBookingsList");
+        const emptyEl = document.getElementById("emptyAllSystem");
+
+        if (!bookings.length) {
+          emptyEl.classList.remove("hidden");
+          container.innerHTML = "";
+          document.getElementById("allTotalCount").textContent = "0";
+          return;
+        }
+
+        document.getElementById("allTotalCount").textContent = bookings.length;
+
+        // Get user's IP to identify their own bookings
+        let userIp = "";
+        fetch(`${API}/ip`)
+          .then((r) => r.json())
+          .then((d) => {
+            userIp = d.ip;
+          })
+          .catch(() => {});
+
+        // Separate into "Mine" and "Others"
+        const mine = bookings.filter((b) => b.userIp === myIp);
+        const others = bookings.filter((b) => b.userIp !== myIp);
+
+        let html = "";
+        if (mine.length) {
+          html += `<div class="section-divider"><span>🙋 My Bookings (${mine.length})</span></div>`;
+          html += mine.map((b) => bookingCard(b, true)).join("");
+        }
+        if (others.length) {
+          html += `<div class="section-divider"><span>👥 All Other Bookings (${others.length})</span></div>`;
+          html += others.map((b) => bookingCard(b, false)).join("");
+        }
+        container.innerHTML = html;
+      }
+
+      function updateAllStats(bookings) {
+        const total = bookings.length;
+        const pending = bookings.filter((b) => b.status === "Pending").length;
+        const confirmed = bookings.filter(
+          (b) => b.status === "Confirmed",
+        ).length;
+        const done = bookings.filter((b) => b.status === "Done").length;
+        const cancelled = bookings.filter(
+          (b) => b.status === "Cancelled",
+        ).length;
+
+        document.getElementById("all-st-total").textContent = total;
+        document.getElementById("all-st-pending").textContent = pending;
+        document.getElementById("all-st-confirmed").textContent = confirmed;
+        document.getElementById("all-st-done").textContent = done;
+        document.getElementById("all-st-cancelled").textContent = cancelled;
+      }
+
+      // ── Build a booking card ──────────────────────────────────────
+      function bookingCard(b, isMine) {
+        const status = b.status || "Pending";
+        const created = new Date(b.createdAt).toLocaleDateString("en-PK", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+
+        const loc = b.customer?.location || "";
+        const coords = b.customer?.locationCoords;
+        const hasCoords = coords && coords.lat != null && coords.lng != null;
+
+        const mapsUrl = hasCoords
+          ? `https://www.google.com/maps?q=${coords.lat},${coords.lng}`
+          : loc
+            ? `https://www.google.com/maps/search/${encodeURIComponent(loc)}`
+            : "";
+
+        const locationHtml = loc
+          ? `<div class="bg-slate-900 rounded-lg px-3 py-2">
+               <p class="text-slate-500 mb-0.5 text-xs">📍 Location</p>
+               <p class="text-white text-xs font-medium mb-1 leading-snug">${esc(loc)}</p>
+               ${
+                 mapsUrl
+                   ? `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="map-link">
+                  🗺️ Open in Maps
+               </a>`
+                   : ""
+               }
+             </div>`
+          : `<div class="bg-slate-900 rounded-lg px-3 py-2">
+               <p class="text-slate-500 mb-0.5 text-xs">📍 Location</p>
+               <p class="text-slate-600 text-xs italic">Not provided</p>
+             </div>`;
+
+        return `
+<div class="bcard rounded-2xl border mb-3 p-4 sm:p-5 fade-in
+  ${isMine ? "bg-slate-800 border-orange-500/30" : "bg-slate-800/60 border-slate-700"}">
+
+  <div class="flex items-start justify-between gap-3 mb-3">
+    <div class="flex items-center gap-2 flex-wrap">
+      ${isMine ? '<span class="mine-tag text-xs px-2.5 py-0.5 rounded-full">My Booking</span>' : '<span class="all-booking-tag text-xs px-2.5 py-0.5 rounded-full">Customer</span>'}
+      <p class="font-bold text-white text-sm">${esc(b.customer?.name || "Unknown")}</p>
+      <span class="text-slate-500 text-xs">${esc(b.customer?.phone || "")}</span>
+      <span class="text-slate-600 text-xs">(IP: ${b.userIp || "N/A"})</span>
+    </div>
+    <span class="px-2.5 py-1 rounded-full text-xs font-semibold badge-${status} whitespace-nowrap shrink-0">${status}</span>
+  </div>
+
+  <div class="grid sm:grid-cols-4 gap-2 text-xs mb-3">
+    <div class="bg-slate-900 rounded-lg px-3 py-2">
+      <p class="text-slate-500 mb-0.5">Vehicle</p>
+      <p class="text-white font-medium">${esc(b.vehicle?.make || "")} ${esc(b.vehicle?.model || "")}
+        ${b.vehicle?.year ? '<span class="text-slate-500">(' + b.vehicle.year + ")</span>" : ""}</p>
+      <p class="text-orange-300 font-semibold">${esc(b.vehicle?.plate || "")}</p>
+    </div>
+    <div class="bg-slate-900 rounded-lg px-3 py-2">
+      <p class="text-slate-500 mb-0.5">Service</p>
+      <p class="text-white font-medium">${b.service?.icon || "🔧"} ${esc(b.service?.name || "")}</p>
+      <p class="text-orange-400 font-bold">${esc(b.service?.price || "")}</p>
+    </div>
+    <div class="bg-slate-900 rounded-lg px-3 py-2">
+      <p class="text-slate-500 mb-0.5">Slot</p>
+      <p class="text-white font-medium">${esc(b.slot?.date || "")}</p>
+      <p class="text-slate-400">${esc(b.slot?.time || "")}</p>
+    </div>
+    ${locationHtml}
+  </div>
+
+  ${b.customer?.notes ? `<p class="text-xs text-slate-400 italic mb-2">"${esc(b.customer.notes)}"</p>` : ""}
+  ${b.workshopNote ? `<p class="text-xs bg-yellow-900/20 border border-yellow-700/30 rounded-lg px-3 py-2 text-yellow-300 mb-2">📋 ${esc(b.workshopNote)}</p>` : ""}
+
+  <div class="flex items-center gap-2 flex-wrap">
+    ${
+      isMine
+        ? `<button onclick="openModal('${b._id}','${esc(status)}',\`${esc(b.workshopNote || "")}\`)"
+        class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-orange-500 text-white text-xs font-semibold transition-colors">✏️ Edit</button>`
+        : ""
+    }
+    ${
+      isMine
+        ? `<button onclick="deleteBooking('${b._id}')"
+        class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-red-600 text-white text-xs font-semibold transition-colors">🗑 Delete</button>`
+        : ""
+    }
+    <span class="ml-auto text-slate-600 text-xs">${created}</span>
+  </div>
+</div>`;
+      }
+
+      // ── Stats ─────────────────────────────────────────────────────
+      async function loadStats() {
+        try {
+          const r = await fetch(`${API}/bookings/stats/summary`);
+          const d = await r.json();
+          if (!d.success) return;
+          const s = d.data;
+          document.getElementById("st-total").textContent = s.total ?? 0;
+          document.getElementById("st-pending").textContent = s.Pending ?? 0;
+          document.getElementById("st-confirmed").textContent =
+            s.Confirmed ?? 0;
+          document.getElementById("st-done").textContent = s.Done ?? 0;
+          document.getElementById("st-cancelled").textContent =
+            s.Cancelled ?? 0;
+        } catch (e) {}
+      }
+
+      // ── Modal ─────────────────────────────────────────────────────
+      function openModal(id, status, note) {
+        document.getElementById("editId").value = id;
+        document.getElementById("editStatus").value = status;
+        document.getElementById("editNote").value = note;
+        document.getElementById("modalError").classList.add("hidden");
+        document.getElementById("modal").classList.remove("hidden");
+      }
+      function closeModal() {
+        document.getElementById("modal").classList.add("hidden");
+      }
+
+      async function saveEdit() {
+        const id = document.getElementById("editId").value;
+        const status = document.getElementById("editStatus").value;
+        const note = document.getElementById("editNote").value.trim();
+        const errEl = document.getElementById("modalError");
+        const btn = document.getElementById("saveEditBtn");
+
+        errEl.classList.add("hidden");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<span class="spinner inline-block mr-2"></span>Saving…';
+
+        try {
+          const res = await fetch(`${API}/bookings/${id}/status`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status, workshopNote: note }),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            errEl.textContent = data.error;
+            errEl.classList.remove("hidden");
+            return;
+          }
+          closeModal();
+          showToast("Booking updated ✅");
+          loadMyBookings();
+          loadAllSystemBookings();
+        } catch (e) {
+          errEl.textContent = "Network error";
+          errEl.classList.remove("hidden");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save";
+        }
+      }
+
+      // ── Delete ────────────────────────────────────────────────────
+      async function deleteBooking(id) {
+        if (!confirm("Delete this booking?")) return;
+        try {
+          const res = await fetch(`${API}/bookings/${id}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (!data.success) {
+            showToast(data.error || "Delete failed", false);
+            return;
+          }
+          showToast("Booking deleted");
+          loadMyBookings();
+          loadAllSystemBookings();
+        } catch (e) {
+          showToast("Network error", false);
+        }
+      }
+
+      // ── Tabs ──────────────────────────────────────────────────────
+      function showTab(name) {
+        ["book", "all", "allbookings"].forEach((t) => {
+          document
+            .getElementById("view-" + t)
+            .classList.toggle("hidden", t !== name);
+          document
+            .getElementById("tab-" + t)
+            .classList.toggle("active", t === name);
+        });
+        if (name === "all") loadMyBookings();
+        if (name === "allbookings") loadAllSystemBookings();
+      }
+
+      // ── Helpers ───────────────────────────────────────────────────
+      function v(id) {
+        return document.getElementById(id)?.value?.trim() || "";
+      }
+      function esc(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function setLoading(on) {
+        document.getElementById("loadingEl").classList.toggle("hidden", !on);
+      }
+      function setAllLoading(on) {
+        document.getElementById("allLoadingEl").classList.toggle("hidden", !on);
+      }
+      function showError(msg) {
+        const el = document.getElementById("formError");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      function hideError() {
+        document.getElementById("formError").classList.add("hidden");
+      }
+      function debounceSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(loadMyBookings, 400);
+      }
+      function debounceAllSearch() {
+        clearTimeout(allSearchTimer);
+        allSearchTimer = setTimeout(loadAllSystemBookings, 400);
+      }
+
+      document.getElementById("modal").addEventListener("click", function (e) {
+        if (e.target === this) closeModal();
+      });
+
+      // ── Init load all stats ──────────────────────────────────────
+      loadStats();
+    </script>
+  </body>
+</html>
